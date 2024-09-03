@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+// Base:
 #include "M2PW14Character.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
@@ -8,6 +9,17 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+
+// UE:
+#include "GameplayEffect.h"
+
+// GAS:
+#include "M2PW14/GAS/GAS_AbilitySystemComponent.h"
+#include "M2PW14/GAS/GAS_AttributeSet.h"
+#include "M2PW14/GAS/GAS_GameplayAbility.h"
+//--------------------------------------------------------------------------------------
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // AM2PW14Character
@@ -45,7 +57,80 @@ AM2PW14Character::AM2PW14Character()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+
+
+	/* ---   GAS   --- */
+
+	AbilitySystemComponent = CreateDefaultSubobject<UGAS_AbilitySystemComponent>(TEXT("AbilitySystemComp"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
+
+	AttributeSet = CreateDefaultSubobject<UGAS_AttributeSet>(TEXT("Attributes"));
+	//-------------------------------------------
 }
+//--------------------------------------------------------------------------------------
+
+
+
+/* ---   GAS   --- */
+
+UAbilitySystemComponent* AM2PW14Character::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void AM2PW14Character::InitAttributes()
+{
+	if (AbilitySystemComponent && DefaultAttributeEffect)
+	{
+		FGameplayEffectContextHandle lEffectContextHandle = AbilitySystemComponent->MakeEffectContext();
+		lEffectContextHandle.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle lSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
+			DefaultAttributeEffect,
+			1,
+			lEffectContextHandle);
+
+		if (lSpecHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*lSpecHandle.Data.Get());
+		}
+	}
+}
+
+void AM2PW14Character::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	InitAttributes();
+}
+
+void AM2PW14Character::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	InitAttributes();
+
+	//if (AbilitySystemComponent && InputComponent)
+	//{
+	//	const FGameplayAbilityInputBinds InputBinds(
+	//		"Confirm",
+	//		"Cancel",
+	//		"EGASAbilityInputID",
+	//		static_cast<int32>(EGASAbilityInputID::Confirm),
+	//		static_cast<int32>(EGASAbilityInputID::Cancel)
+	//	);
+
+	//	AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, InputBinds);
+	//}
+}
+
+//--------------------------------------------------------------------------------------
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -90,12 +175,12 @@ void AM2PW14Character::OnResetVR()
 
 void AM2PW14Character::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		Jump();
+	Jump();
 }
 
 void AM2PW14Character::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		StopJumping();
+	StopJumping();
 }
 
 void AM2PW14Character::TurnAtRate(float Rate)
@@ -126,12 +211,12 @@ void AM2PW14Character::MoveForward(float Value)
 
 void AM2PW14Character::MoveRight(float Value)
 {
-	if ( (Controller != nullptr) && (Value != 0.0f) )
+	if ((Controller != nullptr) && (Value != 0.0f))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
+
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction

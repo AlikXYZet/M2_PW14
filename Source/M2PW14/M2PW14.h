@@ -3,3 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+UENUM(BlueprintType)
+enum class EGASAbilityInputID : uint8
+{
+	None,		// Требуется для GAS
+	Confirm,	// Требуется для GAS
+	Cancel,		// Требуется для GAS
+	Healing,	// Лечение
+	Blocking,	// Блокировка урона
+};

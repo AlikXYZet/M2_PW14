@@ -2,12 +2,21 @@
 
 #pragma once
 
+// Base:
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
+// GAS:
+#include "AbilitySystemInterface.h"
+
+// Generated:
 #include "M2PW14Character.generated.h"
+//--------------------------------------------------------------------------------------
+
+
 
 UCLASS(config=Game)
-class AM2PW14Character : public ACharacter
+class AM2PW14Character : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -18,7 +27,23 @@ class AM2PW14Character : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+	//-------------------------------------------
+
+
+
+	/* ---   GAS   --- */
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AbilitySystem, meta = (AllowPrivateAccess = "true"))
+	class UGAS_AbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY()
+	class UGAS_AttributeSet* AttributeSet;
+	//-------------------------------------------
+
+
+
 public:
+
 	AM2PW14Character();
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
@@ -28,6 +53,29 @@ public:
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
+	//-------------------------------------------
+
+
+
+	/* ---   GAS   --- */
+
+	UPROPERTY(EditDefaultsOnly, Category = "GameplayAbility")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GameplayAbility")
+	TArray<TSubclassOf<class UGAS_GameplayAbility>> DefaultAbilities;
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	virtual void InitAttributes();
+
+	virtual void PossessedBy(AController* NewController) override;
+
+	virtual void OnRep_PlayerState() override;
+
+	//-------------------------------------------
+
+
 
 protected:
 
