@@ -3,3 +3,6 @@
 
 #include "GAS_GameplayAbility.h"
 
+UGAS_GameplayAbility::UGAS_GameplayAbility()
+{
+}

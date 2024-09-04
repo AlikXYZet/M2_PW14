@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 UENUM(BlueprintType)
-enum class EGASAbilityInputID : uint8
+enum class EGAS_AbilityInputID : uint8
 {
 	None,		// Требуется для GAS
 	Confirm,	// Требуется для GAS

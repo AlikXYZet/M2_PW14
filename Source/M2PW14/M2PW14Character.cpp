@@ -99,12 +99,25 @@ void AM2PW14Character::InitAttributes()
 	}
 }
 
+void AM2PW14Character::InitDefaultAbilities()
+{
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (TSubclassOf<UGAS_GameplayAbility>& Ability : DefaultAbilities)
+		{
+			int32 InputID = static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID);
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(Ability, 1, InputID, this));
+		}
+	}
+}
+
 void AM2PW14Character::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	InitAttributes();
+	InitDefaultAbilities();
 }
 
 void AM2PW14Character::OnRep_PlayerState()
@@ -114,18 +127,18 @@ void AM2PW14Character::OnRep_PlayerState()
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	InitAttributes();
 
-	//if (AbilitySystemComponent && InputComponent)
-	//{
-	//	const FGameplayAbilityInputBinds InputBinds(
-	//		"Confirm",
-	//		"Cancel",
-	//		"EGASAbilityInputID",
-	//		static_cast<int32>(EGASAbilityInputID::Confirm),
-	//		static_cast<int32>(EGASAbilityInputID::Cancel)
-	//	);
+	if (AbilitySystemComponent && InputComponent)
+	{
+		const FGameplayAbilityInputBinds InputBinds(
+			"Confirm",
+			"Cancel",
+			"EGAS_AbilityInputID",
+			static_cast<int32>(EGAS_AbilityInputID::Confirm),
+			static_cast<int32>(EGAS_AbilityInputID::Cancel)
+		);
 
-	//	AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, InputBinds);
-	//}
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, InputBinds);
+	}
 }
 
 //--------------------------------------------------------------------------------------
@@ -159,6 +172,24 @@ void AM2PW14Character::SetupPlayerInputComponent(class UInputComponent* PlayerIn
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AM2PW14Character::OnResetVR);
+
+
+
+	/* ---   GAS   --- */
+
+	if (AbilitySystemComponent && InputComponent)
+	{
+		const FGameplayAbilityInputBinds InputBinds(
+			"Confirm",
+			"Cancel",
+			"EGAS_AbilityInputID",
+			static_cast<int32>(EGAS_AbilityInputID::Confirm),
+			static_cast<int32>(EGAS_AbilityInputID::Cancel)
+		);
+
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, InputBinds);
+	}
+	//-------------------------------------------
 }
 
 
